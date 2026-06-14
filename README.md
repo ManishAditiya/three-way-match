@@ -4,12 +4,205 @@ Backend service for uploading PO, GRN, and Invoice PDFs, extracting structured
 data via the Gemini API, storing it in MongoDB, and performing item-level
 three-way matching.
 
+## Prerequisites
+
+- Node.js 16+
+- MongoDB (local or remote)
+- Google Gemini API key
+
 ## Setup
 
 ```bash
+# Clone repository
+git clone https://github.com/ManishAditiya/three-way-match.git
+cd three-way-match
+
+# Install dependencies
 npm install
-cp .env.example .env   # then fill in MONGO_URI and GEMINI_API_KEY
-npm run dev            # or: npm start
+
+# Create environment file
+cp .env.example .env
+
+# Configure .env:
+# PORT=5000
+# MONGO_URI=mongodb://localhost:27017/three_way_match
+# GEMINI_API_KEY=your_gemini_api_key_here
+# GEMINI_MODEL=gemini-2.0-flash
+
+# Run server (development with hot-reload)
+npm run dev
+
+# Or run in production
+npm start
+```
+
+Server will be running at `http://localhost:5000`
+
+## API Endpoints
+
+### 1. Health Check
+```
+GET /
+```
+Returns: `{ status: 'ok', service: 'three-way-match-engine' }`
+
+### 2. Upload Document
+```
+POST /documents/upload
+Content-Type: multipart/form-data
+
+Parameters:
+- file: PDF file to upload
+- documentType: 'po' | 'grn' | 'invoice'
+```
+
+**Response (201):**
+```json
+{
+  "message": "PO uploaded and parsed successfully",
+  "document": {
+    "_id": "507f1f77bcf86cd799439011",
+    "poNumber": "CI4PO05788",
+    "poDate": "2026-03-17",
+    "vendorName": "ABC Suppliers Ltd",
+    "items": [
+      {
+        "itemCode": "11423",
+        "description": "450g Premium Item",
+        "quantity": 100,
+        "itemKey": "450gpremiumitem"
+      }
+    ],
+    "sourceFile": "PO.pdf",
+    "rawExtraction": "...",
+    "parsingStatus": "success"
+  },
+  "matchResult": {
+    "_id": "507f1f77bcf86cd799439012",
+    "poNumber": "CI4PO05788",
+    "status": "insufficient_documents",
+    "reasons": ["grn_and_invoice_missing"],
+    "itemDetails": [],
+    "linkedDocuments": {
+      "po": "507f1f77bcf86cd799439011",
+      "grns": [],
+      "invoices": []
+    }
+  }
+}
+```
+
+**Error (422 - Validation):**
+```json
+{
+  "error": "Extracted data failed validation: Missing required field: poNumber",
+  "rawExtraction": { ... }
+}
+```
+
+**Error (502 - Gemini):**
+```json
+{
+  "error": "Gemini parsing failed: API rate limit exceeded"
+}
+```
+
+### 3. Get Document by ID
+```
+GET /documents/:id
+```
+
+**Response (200):**
+```json
+{
+  "documentType": "po",
+  "document": {
+    "_id": "507f1f77bcf86cd799439011",
+    "poNumber": "CI4PO05788",
+    ...
+  }
+}
+```
+
+### 4. Get Match Result by PO Number
+```
+GET /match/:poNumber
+```
+
+**Response (200) - Matched:**
+```json
+{
+  "_id": "507f1f77bcf86cd799439013",
+  "poNumber": "CI4PO05788",
+  "status": "matched",
+  "reasons": [],
+  "itemDetails": [
+    {
+      "itemKey": "450gpremiumitem",
+      "description": "450g Premium Item",
+      "poQty": 100,
+      "grnQty": 100,
+      "invoiceQty": 100,
+      "issues": []
+    }
+  ],
+  "linkedDocuments": {
+    "po": "507f1f77bcf86cd799439011",
+    "grns": ["507f1f77bcf86cd799439012"],
+    "invoices": ["507f1f77bcf86cd799439013"]
+  },
+  "lastComputedAt": "2026-03-20T10:30:45.123Z"
+}
+```
+
+**Response (200) - Mismatch:**
+```json
+{
+  "poNumber": "CI4PO05788",
+  "status": "mismatch",
+  "reasons": ["invoice_qty_exceeds_po_qty", "invoice_date_after_po_date"],
+  "itemDetails": [
+    {
+      "itemKey": "450gpremiumitem",
+      "description": "450g Premium Item",
+      "poQty": 100,
+      "grnQty": 110,
+      "invoiceQty": 105,
+      "issues": ["grn_qty_exceeds_po_qty", "invoice_qty_exceeds_grn_qty"]
+    }
+  ],
+  "linkedDocuments": { ... }
+}
+```
+
+**Response (200) - Partially Matched:**
+```json
+{
+  "poNumber": "CI4PO05788",
+  "status": "partially_matched",
+  "reasons": ["invoice_missing"],
+  "itemDetails": [ ... ],
+  "linkedDocuments": {
+    "po": "507f1f77bcf86cd799439011",
+    "grns": ["507f1f77bcf86cd799439012"],
+    "invoices": []
+  }
+}
+```
+
+**Response (200) - Insufficient Documents:**
+```json
+{
+  "poNumber": "CI4PO05788",
+  "status": "insufficient_documents",
+  "reasons": ["po_missing"],
+  "itemDetails": [],
+  "linkedDocuments": {
+    "po": null,
+    "grns": ["507f1f77bcf86cd799439012"],
+    "invoices": []
+  }
+}
 ```
 
 ## Approach
@@ -83,6 +276,32 @@ recompute finds everything and resolves normally. `GET /match/:poNumber` also
 recomputes on read, so it always returns the latest state even for a
 `poNumber` queried for the first time.
 
+## Example Workflow
+
+```bash
+# 1. Upload Invoice first (Invoice for PO-123 arrives early)
+curl -X POST http://localhost:5000/documents/upload \
+  -F "file=@invoice.pdf" \
+  -F "documentType=invoice"
+# Response: status = "insufficient_documents" (po_missing)
+
+# 2. Upload GRN (GRN for PO-123 arrives)
+curl -X POST http://localhost:5000/documents/upload \
+  -F "file=@grn.pdf" \
+  -F "documentType=grn"
+# Response: status = "insufficient_documents" (po_missing)
+
+# 3. Upload PO (Finally PO-123 arrives)
+curl -X POST http://localhost:5000/documents/upload \
+  -F "file=@po.pdf" \
+  -F "documentType=po"
+# Response: status = "matched" or "mismatch" (depending on quantities)
+
+# 4. Query final result
+curl http://localhost:5000/match/PO-123
+# Response: Complete match result with all details
+```
+
 ## Assumptions
 
 - One PO per `poNumber` is expected; duplicates are flagged (`duplicate_po`)
@@ -98,3 +317,43 @@ recomputes on read, so it always returns the latest state even for a
 - Add authentication and per-vendor/tenant scoping.
 - Add pagination for `GET /documents` style listing endpoints (not currently
   required by the spec).
+- Add webhook notifications when match status changes.
+- Add bulk upload endpoints for multiple documents at once.
+
+## Testing with Postman
+
+A Postman collection is provided in `postman_collection.json`. Import it into
+Postman and configure the `baseUrl` variable to `http://localhost:5000`.
+
+## Project Structure
+
+```
+three-way-match/
+├── src/
+│   ├── app.js                 # Express app setup
+│   ├── server.js              # Server entry point
+│   ├── config/
+│   │   └── db.js              # MongoDB connection
+│   ├── models/
+│   │   ├── P0.js              # PO schema
+│   │   ├── GRN.js             # GRN schema
+│   │   ├── Invoice.js         # Invoice schema
+│   │   └── MatchResult.js     # Match result schema
+│   ├── controllers/
+│   │   ├── documentController.js  # Document upload & retrieval
+│   │   └── matchController.js     # Match result retrieval
+│   ├── services/
+│   │   ├── geminiService.js   # Gemini API integration
+│   │   └── matchingService.js # Three-way match logic
+│   ├── routes/
+│   │   ├── documentRoutes.js  # Document endpoints
+│   │   └── matchRoutes.js     # Match endpoints
+│   ├── middleware/
+│   │   └── upload.js          # Multer file upload config
+│   └── utils/
+│       └── itemKey.js         # Item key normalization
+├── package.json
+├── .env.example
+├── postman_collection.json
+└── README.md
+```

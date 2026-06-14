@@ -1,0 +1,64 @@
+{
+  "message": "INVOICE uploaded and parsed successfully",
+  "document": {
+    "_id": "507f1f77bcf86cd799439020",
+    "invoiceNumber": "INV-2026-0558",
+    "poNumber": "CI4PO05788",
+    "invoiceDate": "2026-03-17",
+    "items": [
+      {
+        "_id": "507f1f77bcf86cd799439021",
+        "itemCode": "FG-P-F-0503",
+        "description": "450g Premium Milk",
+        "quantity": 100,
+        "itemKey": "450gpremiummmilk"
+      },
+      {
+        "_id": "507f1f77bcf86cd799439022",
+        "itemCode": "FG-P-C-0251",
+        "description": "250g Curd",
+        "quantity": 50,
+        "itemKey": "250gcurd"
+      }
+    ],
+    "sourceFile": "INV-2026-0558.pdf",
+    "documentType": "invoice",
+    "rawExtraction": "{\"invoiceNumber\": \"INV-2026-0558\", \"poNumber\": \"CI4PO05788\", ...}",
+    "parsingStatus": "success",
+    "parsingError": null,
+    "createdAt": "2026-03-20T10:30:15.789Z",
+    "updatedAt": "2026-03-20T10:30:15.789Z"
+  },
+  "matchResult": {
+    "_id": "507f1f77bcf86cd799439016",
+    "poNumber": "CI4PO05788",
+    "status": "matched",
+    "reasons": [],
+    "itemDetails": [
+      {
+        "itemKey": "450gpremiummmilk",
+        "description": "450.0 g Premium Milk",
+        "poQty": 100,
+        "grnQty": 100,
+        "invoiceQty": 100,
+        "issues": []
+      },
+      {
+        "itemKey": "250gcurd",
+        "description": "250 g Curd Packets",
+        "poQty": 50,
+        "grnQty": 50,
+        "invoiceQty": 50,
+        "issues": []
+      }
+    ],
+    "linkedDocuments": {
+      "po": "507f1f77bcf86cd799439011",
+      "grns": ["507f1f77bcf86cd799439017"],
+      "invoices": ["507f1f77bcf86cd799439020"]
+    },
+    "lastComputedAt": "2026-03-20T10:30:15.789Z",
+    "createdAt": "2026-03-20T08:15:30.123Z",
+    "updatedAt": "2026-03-20T10:30:15.789Z"
+  }
+}

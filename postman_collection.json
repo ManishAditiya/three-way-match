@@ -1,67 +1,161 @@
 {
   "info": {
     "name": "Three-Way Match Engine",
+    "description": "API collection for matching Purchase Orders, Goods Receipt Notes, and Invoices",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:5000" }
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "document_id", "value": "" },
+    { "key": "po_number", "value": "CI4PO05788" }
   ],
   "item": [
     {
-      "name": "Upload PO",
-      "request": {
-        "method": "POST",
-        "url": "{{baseUrl}}/documents/upload",
-        "body": {
-          "mode": "formdata",
-          "formdata": [
-            { "key": "file", "type": "file", "src": "PO.pdf" },
-            { "key": "documentType", "value": "po", "type": "text" }
-          ]
-        }
-      }
-    },
-    {
-      "name": "Upload GRN",
-      "request": {
-        "method": "POST",
-        "url": "{{baseUrl}}/documents/upload",
-        "body": {
-          "mode": "formdata",
-          "formdata": [
-            { "key": "file", "type": "file", "src": "GRN.pdf" },
-            { "key": "documentType", "value": "grn", "type": "text" }
-          ]
-        }
-      }
-    },
-    {
-      "name": "Upload Invoice",
-      "request": {
-        "method": "POST",
-        "url": "{{baseUrl}}/documents/upload",
-        "body": {
-          "mode": "formdata",
-          "formdata": [
-            { "key": "file", "type": "file", "src": "Invoice.pdf" },
-            { "key": "documentType", "value": "invoice", "type": "text" }
-          ]
-        }
-      }
-    },
-    {
-      "name": "Get Document by ID",
+      "name": "1. Health Check",
+      "event": [],
       "request": {
         "method": "GET",
-        "url": "{{baseUrl}}/documents/:id"
-      }
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "protocol": "http",
+          "host": ["{{baseUrl}}"],
+          "path": [""]
+        }
+      },
+      "response": [],
+      "description": "Test if the API server is running"
     },
     {
-      "name": "Get Match Result by PO Number",
+      "name": "2. Upload PO",
+      "event": [],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "PO.pdf",
+              "description": "Upload a PO PDF file"
+            },
+            {
+              "key": "documentType",
+              "value": "po",
+              "type": "text",
+              "description": "Document type must be 'po'"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/documents/upload",
+          "protocol": "http",
+          "host": ["{{baseUrl}}"],
+          "path": ["documents", "upload"]
+        }
+      },
+      "response": [],
+      "description": "Upload a Purchase Order PDF. Gemini extracts: poNumber, poDate, vendorName, items[]. Returns parsed document and match result."
+    },
+    {
+      "name": "3. Upload GRN",
+      "event": [],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "GRN.pdf",
+              "description": "Upload a GRN PDF file"
+            },
+            {
+              "key": "documentType",
+              "value": "grn",
+              "type": "text",
+              "description": "Document type must be 'grn'"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/documents/upload",
+          "protocol": "http",
+          "host": ["{{baseUrl}}"],
+          "path": ["documents", "upload"]
+        }
+      },
+      "response": [],
+      "description": "Upload a Goods Receipt Note PDF. Gemini extracts: grnNumber, poNumber, grnDate, items[] with receivedQuantity. Returns parsed document and updated match result."
+    },
+    {
+      "name": "4. Upload Invoice",
+      "event": [],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "Invoice.pdf",
+              "description": "Upload an Invoice PDF file"
+            },
+            {
+              "key": "documentType",
+              "value": "invoice",
+              "type": "text",
+              "description": "Document type must be 'invoice'"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/documents/upload",
+          "protocol": "http",
+          "host": ["{{baseUrl}}"],
+          "path": ["documents", "upload"]
+        }
+      },
+      "response": [],
+      "description": "Upload an Invoice PDF. Gemini extracts: invoiceNumber, poNumber, invoiceDate, items[] with quantity. Returns parsed document and final match result."
+    },
+    {
+      "name": "5. Get Document by ID",
+      "event": [],
       "request": {
         "method": "GET",
-        "url": "{{baseUrl}}/match/CI4PO05788"
-      }
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/documents/{{document_id}}",
+          "protocol": "http",
+          "host": ["{{baseUrl}}"],
+          "path": ["documents", "{{document_id}}"]
+        }
+      },
+      "response": [],
+      "description": "Retrieve a specific document (PO, GRN, or Invoice) by its MongoDB ObjectId. Use the _id returned from upload responses."
+    },
+    {
+      "name": "6. Get Match Result by PO Number",
+      "event": [],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/match/{{po_number}}",
+          "protocol": "http",
+          "host": ["{{baseUrl}}"],
+          "path": ["match", "{{po_number}}"]
+        }
+      },
+      "response": [],
+      "description": "Get the three-way match result for a specific PO number. Returns: status (matched/partially_matched/mismatch/insufficient_documents), reasons[], item-level details with quantity comparisons, and linked document IDs."
     }
   ]
 }

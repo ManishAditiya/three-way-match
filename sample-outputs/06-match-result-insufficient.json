@@ -1,0 +1,15 @@
+{
+  "_id": "507f1f77bcf86cd799439016",
+  "poNumber": "CI4PO05788",
+  "status": "insufficient_documents",
+  "reasons": ["po_missing"],
+  "itemDetails": [],
+  "linkedDocuments": {
+    "po": null,
+    "grns": ["507f1f77bcf86cd799439017"],
+    "invoices": ["507f1f77bcf86cd799439020"]
+  },
+  "lastComputedAt": "2026-03-20T09:15:30.123Z",
+  "createdAt": "2026-03-20T09:15:30.123Z",
+  "updatedAt": "2026-03-20T09:15:30.123Z"
+}

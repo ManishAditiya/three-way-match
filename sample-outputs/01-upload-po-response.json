@@ -1,0 +1,45 @@
+{
+  "message": "PO uploaded and parsed successfully",
+  "document": {
+    "_id": "507f1f77bcf86cd799439011",
+    "poNumber": "CI4PO05788",
+    "poDate": "2026-03-15",
+    "vendorName": "ABC Suppliers Ltd",
+    "items": [
+      {
+        "_id": "507f1f77bcf86cd799439014",
+        "itemCode": "11423",
+        "description": "450.0 g Premium Milk",
+        "quantity": 100,
+        "itemKey": "450gpremiummmilk"
+      },
+      {
+        "_id": "507f1f77bcf86cd799439015",
+        "itemCode": "11424",
+        "description": "250 g Curd Packets",
+        "quantity": 50,
+        "itemKey": "250gcurdpackets"
+      }
+    ],
+    "sourceFile": "CI4PO05788.pdf",
+    "documentType": "po",
+    "rawExtraction": "{\"poNumber\": \"CI4PO05788\", \"poDate\": \"2026-03-15\", ...}",
+    "parsingStatus": "success",
+    "parsingError": null,
+    "createdAt": "2026-03-20T08:15:30.123Z",
+    "updatedAt": "2026-03-20T08:15:30.123Z"
+  },
+  "matchResult": {
+    "_id": "507f1f77bcf86cd799439016",
+    "poNumber": "CI4PO05788",
+    "status": "insufficient_documents",
+    "reasons": ["grn_and_invoice_missing"],
+    "itemDetails": [],
+    "linkedDocuments": {
+      "po": "507f1f77bcf86cd799439011",
+      "grns": [],
+      "invoices": []
+    },
+    "lastComputedAt": "2026-03-20T08:15:30.123Z"
+  }
+}
