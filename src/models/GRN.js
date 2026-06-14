@@ -41,6 +41,5 @@ grnSchema.pre('save', function (next) {
 });
 
 // NOTE: poNumber is intentionally NOT unique - multiple GRNs can exist per PO
-grnSchema.index({ poNumber: 1 });
 
 module.exports = mongoose.model('GRN', grnSchema);

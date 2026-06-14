@@ -40,6 +40,4 @@ poSchema.pre('save', function (next) {
   next();
 });
 
-poSchema.index({ poNumber: 1 });
-
 module.exports = mongoose.model('PO', poSchema);

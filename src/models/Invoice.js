@@ -41,6 +41,5 @@ invoiceSchema.pre('save', function (next) {
 });
 
 // NOTE: poNumber is intentionally NOT unique - multiple Invoices can exist per PO
-invoiceSchema.index({ poNumber: 1 });
 
 module.exports = mongoose.model('Invoice', invoiceSchema);
