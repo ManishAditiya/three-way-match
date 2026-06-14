@@ -1,1 +1,67 @@
-{}
+{
+  "info": {
+    "name": "Three-Way Match Engine",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" }
+  ],
+  "item": [
+    {
+      "name": "Upload PO",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/documents/upload",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "file", "type": "file", "src": "PO.pdf" },
+            { "key": "documentType", "value": "po", "type": "text" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Upload GRN",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/documents/upload",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "file", "type": "file", "src": "GRN.pdf" },
+            { "key": "documentType", "value": "grn", "type": "text" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Upload Invoice",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/documents/upload",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "file", "type": "file", "src": "Invoice.pdf" },
+            { "key": "documentType", "value": "invoice", "type": "text" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Document by ID",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/documents/:id"
+      }
+    },
+    {
+      "name": "Get Match Result by PO Number",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/match/CI4PO05788"
+      }
+    }
+  ]
+}
