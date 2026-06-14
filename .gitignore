@@ -1,4 +1,4 @@
 node_modules/
-uploads/
-.env
-.DS_Store
+.env.example
+uploads/*
+!uploads/.gitkeep
