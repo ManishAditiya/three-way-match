@@ -1,0 +1,12 @@
+{
+  "name": "three-way-match",
+  "version": "1.0.0",
+  "description": "Document matching application",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
